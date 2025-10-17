@@ -8,11 +8,12 @@ const path = require('path');
  * Connects to coordinator, reports stats, requests and executes tasks
  */
 class ComputeAgent {
-  constructor() {
+  constructor(isLocalAgent = false) {
     this.ws = null;
     this.nodeId = null;
     this.config = this.loadConfig();
     this.isRunning = false;
+    this.isLocalAgent = isLocalAgent;
     this.currentTask = null;
     this.stats = {};
     
@@ -41,7 +42,8 @@ class ComputeAgent {
    * Start the compute agent
    */
   async start() {
-    if (!this.config.agent || !this.config.agent.enabled) {
+    // For local coordinator agent, always enable
+    if (!this.config.agent || (!this.config.agent.enabled && !this.isLocalAgent)) {
       console.log('Compute agent is disabled');
       return false;
     }

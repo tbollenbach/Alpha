@@ -875,6 +875,7 @@ class ChatClient {
   }
 
 
+
 }
 
 // Initialize client when DOM is loaded
