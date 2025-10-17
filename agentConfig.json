@@ -1,0 +1,25 @@
+{
+  "enabled": false,
+  "mode": "agent",
+  "coordinatorUrl": "ws://localhost:8080",
+  "apiKey": "demo-key-12345",
+  "reconnectInterval": 5000,
+  "capabilities": {
+    "cpu": true,
+    "gpu": false,
+    "memory": true
+  },
+  "limits": {
+    "maxCPUUsage": 80,
+    "maxMemoryUsage": 80,
+    "maxConcurrentTasks": 1
+  },
+  "modules": {
+    "cpu_compute": true,
+    "hash_compute": true,
+    "fibonacci": true,
+    "prime_check": true,
+    "custom_code": false
+  }
+}
+

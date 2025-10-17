@@ -1,0 +1,18 @@
+{
+  "keys": {
+    "demo-key-12345": {
+      "name": "Demo Helper Node",
+      "permissions": ["compute", "report"],
+      "active": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    "alpha-node-key-001": {
+      "name": "Alpha Node 001",
+      "permissions": ["compute", "report", "admin"],
+      "active": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  },
+  "description": "API keys for helper nodes to connect to the coordinator. Keep these secure!"
+}
+

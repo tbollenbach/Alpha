@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compute Agent - OurWorld</title>
+  <link rel="stylesheet" href="agentStyles.css">
+</head>
+<body>
+  <div class="agent-container">
+    <div class="agent-header">
+      <h1>🖥️ Compute Agent</h1>
+      <span id="status" class="status-badge">Connecting...</span>
+    </div>
+
+    <div class="agent-info">
+      <h2>Node Information</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Node ID:</span>
+          <span id="nodeId" class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Hostname:</span>
+          <span id="hostname" class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">CPU Cores:</span>
+          <span id="cpuCores" class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Memory:</span>
+          <span id="totalMemory" class="info-value">-</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="agent-stats">
+      <h2>Current Stats</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">CPU Usage</div>
+          <div id="cpuUsage" class="stat-value-large">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Memory Usage</div>
+          <div id="memoryUsage" class="stat-value-large">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Tasks Completed</div>
+          <div id="tasksCompleted" class="stat-value-large">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Tasks Failed</div>
+          <div id="tasksFailed" class="stat-value-large">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="current-task">
+      <h2>Current Task</h2>
+      <div id="taskInfo" class="task-info">
+        <p class="no-task">Idle - Waiting for tasks...</p>
+      </div>
+    </div>
+
+    <div class="agent-log">
+      <h2>Activity Log</h2>
+      <div id="logContainer" class="log-container"></div>
+    </div>
+  </div>
+
+  <script>
+    // Simple agent status display
+    const os = require('os');
+    
+    // Display system info
+    document.getElementById('hostname').textContent = os.hostname();
+    document.getElementById('cpuCores').textContent = os.cpus().length;
+    document.getElementById('totalMemory').textContent = (os.totalmem() / (1024**3)).toFixed(2) + ' GB';
+
+    let tasksCompleted = 0;
+    let tasksFailed = 0;
+
+    function updateStats() {
+      const cpus = os.cpus();
+      let totalIdle = 0;
+      let totalTick = 0;
+      
+      cpus.forEach(cpu => {
+        for (const type in cpu.times) {
+          totalTick += cpu.times[type];
+        }
+        totalIdle += cpu.times.idle;
+      });
+      
+      const cpuUsage = 100 - ~~(100 * totalIdle / totalTick);
+      const totalMemory = os.totalmem();
+      const freeMemory = os.freemem();
+      const memoryUsage = ((totalMemory - freeMemory) / totalMemory * 100).toFixed(1);
+
+      document.getElementById('cpuUsage').textContent = cpuUsage + '%';
+      document.getElementById('memoryUsage').textContent = memoryUsage + '%';
+    }
+
+    function addLog(message) {
+      const logContainer = document.getElementById('logContainer');
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      
+      const timestamp = new Date().toLocaleTimeString();
+      logEntry.textContent = `[${timestamp}] ${message}`;
+      
+      logContainer.insertBefore(logEntry, logContainer.firstChild);
+      
+      // Keep only last 50 entries
+      while (logContainer.children.length > 50) {
+        logContainer.removeChild(logContainer.lastChild);
+      }
+    }
+
+    // Update stats every 2 seconds
+    setInterval(updateStats, 2000);
+    updateStats();
+
+    // Simulated connection status
+    setTimeout(() => {
+      document.getElementById('status').textContent = 'Connected';
+      document.getElementById('status').classList.add('connected');
+      addLog('Connected to coordinator');
+    }, 1000);
+
+    // Listen for console logs and display them
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      addLog(args.join(' '));
+    };
+
+    addLog('Agent started');
+  </script>
+</body>
+</html>
+

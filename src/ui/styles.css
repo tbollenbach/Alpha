@@ -447,6 +447,155 @@ body {
   transform: scale(0.98);
 }
 
+/* Compute Panel */
+.compute-panel {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+.compute-stats {
+  background-color: #2f3136;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #36393f;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #8e9297;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 14px;
+  color: #4ecdc4;
+  font-weight: 700;
+}
+
+.nodes-section {
+  flex: 1;
+}
+
+.nodes-section h4 {
+  font-size: 13px;
+  color: #8e9297;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.nodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.node-item {
+  background-color: #2f3136;
+  border-radius: 6px;
+  padding: 12px;
+  border-left: 3px solid #43b581;
+}
+
+.node-item.working {
+  border-left-color: #faa61a;
+}
+
+.node-item.offline {
+  border-left-color: #747f8d;
+}
+
+.node-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #dcddde;
+  margin-bottom: 5px;
+}
+
+.node-status {
+  font-size: 12px;
+  color: #8e9297;
+  margin-bottom: 5px;
+}
+
+.node-progress {
+  font-size: 11px;
+  color: #4ecdc4;
+}
+
+.task-control {
+  background-color: #2f3136;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.task-control h4 {
+  font-size: 13px;
+  color: #8e9297;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.task-type-select {
+  width: 100%;
+  padding: 10px;
+  background-color: #40444b;
+  border: 1px solid #202225;
+  border-radius: 6px;
+  color: #dcddde;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.task-type-select:focus {
+  outline: none;
+  border-color: #4ecdc4;
+}
+
+.create-task-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #5865f2;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-task-btn:hover {
+  background-color: #4752c4;
+}
+
+.create-task-btn:active {
+  transform: scale(0.98);
+}
+
+.create-task-btn:disabled {
+  background-color: #40444b;
+  color: #72767d;
+  cursor: not-allowed;
+}
+
 /* Info Panel */
 .info-panel {
   padding: 20px;

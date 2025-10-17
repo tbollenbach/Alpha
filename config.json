@@ -10,6 +10,13 @@
   "app": {
     "defaultRoom": "#AlphaLobby",
     "theme": "dark"
+  },
+  "compute": {
+    "enabled": true,
+    "maxTaskQueueSize": 100,
+    "taskTimeout": 60000,
+    "heartbeatInterval": 10000,
+    "statsUpdateInterval": 5000
   }
 }
 

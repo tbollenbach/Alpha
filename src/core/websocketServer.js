@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
+const CoordinatorServer = require('./coordinatorServer');
 
 class WebSocketServer {
   constructor() {
@@ -8,6 +9,7 @@ class WebSocketServer {
     this.clients = new Map(); // userId -> { ws, username, role, status, isMuted, isSpeaking }
     this.config = this.loadConfig();
     this.roles = this.loadRoles();
+    this.coordinator = null;
   }
 
   loadConfig() {
@@ -28,6 +30,9 @@ class WebSocketServer {
     });
 
     console.log(`WebSocket server started on 0.0.0.0:${port} (accessible from LAN)`);
+
+    // Initialize coordinator server
+    this.coordinator = new CoordinatorServer(this);
 
     this.wss.on('connection', (ws) => {
       console.log('New client connected');
@@ -77,6 +82,24 @@ class WebSocketServer {
           break;
         case 'voice_state':
           this.handleVoiceState(ws, data);
+          break;
+        // Compute/Coordinator messages
+        case 'node_register':
+        case 'node_heartbeat':
+        case 'node_stats':
+        case 'task_request':
+        case 'task_result':
+        case 'task_progress':
+        case 'node_disconnect':
+          if (this.coordinator) {
+            this.coordinator.handleMessage(ws, data);
+          }
+          break;
+        case 'create_task':
+          this.handleCreateTask(ws, data);
+          break;
+        case 'get_compute_stats':
+          this.handleGetComputeStats(ws, data);
           break;
         default:
           console.log('Unknown message type:', data.type);
@@ -375,6 +398,43 @@ class WebSocketServer {
       isMuted: client.isMuted,
       isSpeaking: client.isSpeaking
     }));
+  }
+
+  handleCreateTask(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    // Check if user has permission to create tasks (admin only)
+    const roleData = this.roles.roles[client.role];
+    if (!roleData.permissions.includes('all')) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'You do not have permission to create tasks'
+      }));
+      return;
+    }
+
+    if (this.coordinator) {
+      const { taskType, taskData, options } = data;
+      const taskId = this.coordinator.createTask(taskType, taskData, options);
+
+      ws.send(JSON.stringify({
+        type: 'task_created',
+        taskId,
+        message: 'Task created and queued'
+      }));
+    }
+  }
+
+  handleGetComputeStats(ws, data) {
+    if (this.coordinator) {
+      const stats = this.coordinator.getNetworkStats();
+
+      ws.send(JSON.stringify({
+        type: 'compute_stats',
+        stats
+      }));
+    }
   }
 
   stop() {

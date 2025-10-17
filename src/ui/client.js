@@ -47,6 +47,15 @@ class ChatClient {
     this.muteBtn = document.getElementById('muteBtn');
     this.voiceStatus = document.getElementById('voiceStatus');
 
+    // Compute network elements
+    this.nodesList = document.getElementById('nodesList');
+    this.createTaskBtn = document.getElementById('createTaskBtn');
+    this.taskType = document.getElementById('taskType');
+    this.statNodes = document.getElementById('stat-nodes');
+    this.statActive = document.getElementById('stat-active');
+    this.statTasks = document.getElementById('stat-tasks');
+    this.statCompleted = document.getElementById('stat-completed');
+
     // Event listeners
     this.joinBtn.addEventListener('click', () => this.handleJoin());
     this.usernameInput.addEventListener('keypress', (e) => {
@@ -64,8 +73,14 @@ class ChatClient {
     this.voiceBtn.addEventListener('click', () => this.toggleVoiceChannel());
     this.muteBtn.addEventListener('click', () => this.toggleMute());
 
+    // Compute network event listeners
+    this.createTaskBtn.addEventListener('click', () => this.createComputeTask());
+
     // Focus username input
     this.usernameInput.focus();
+    
+    // Request compute stats periodically
+    setInterval(() => this.requestComputeStats(), 5000);
   }
 
   handleJoin() {
@@ -170,6 +185,18 @@ class ChatClient {
           break;
         case 'voice_state':
           this.handleVoiceStateChange(message);
+          break;
+        case 'compute_nodes':
+          this.updateComputeNodes(message.nodes);
+          break;
+        case 'compute_stats':
+          this.updateComputeStats(message.stats);
+          break;
+        case 'compute_task_update':
+          this.handleTaskUpdate(message.task);
+          break;
+        case 'task_created':
+          this.handleTaskCreated(message);
           break;
         case 'error':
           this.displayError(message.message);
@@ -648,6 +675,133 @@ class ChatClient {
 
   scrollToBottom() {
     this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+  }
+
+  // Compute Network Methods
+
+  updateComputeNodes(nodes) {
+    this.nodesList.innerHTML = '';
+
+    if (nodes.length === 0) {
+      this.nodesList.innerHTML = '<p style="color: #8e9297; text-align: center; padding: 20px;">No helper nodes connected</p>';
+      return;
+    }
+
+    nodes.forEach(node => {
+      const nodeItem = document.createElement('div');
+      nodeItem.className = 'node-item';
+      if (node.status === 'working') {
+        nodeItem.classList.add('working');
+      } else if (node.status === 'offline') {
+        nodeItem.classList.add('offline');
+      }
+
+      const nodeName = document.createElement('div');
+      nodeName.className = 'node-name';
+      nodeName.textContent = node.hostname || node.nodeId;
+
+      const nodeStatus = document.createElement('div');
+      nodeStatus.className = 'node-status';
+      nodeStatus.textContent = `${node.status.toUpperCase()} | ${node.cpuCores} cores | ${(node.totalMemory / (1024**3)).toFixed(1)}GB`;
+
+      const nodeProgress = document.createElement('div');
+      nodeProgress.className = 'node-progress';
+      nodeProgress.textContent = `✅ ${node.tasksCompleted} | ❌ ${node.tasksFailed}`;
+
+      nodeItem.appendChild(nodeName);
+      nodeItem.appendChild(nodeStatus);
+      nodeItem.appendChild(nodeProgress);
+
+      this.nodesList.appendChild(nodeItem);
+    });
+  }
+
+  updateComputeStats(stats) {
+    this.statNodes.textContent = stats.totalNodes;
+    this.statActive.textContent = stats.activeNodes;
+    this.statTasks.textContent = stats.pendingTasks + stats.runningTasks;
+    this.statCompleted.textContent = stats.completedTasks;
+  }
+
+  handleTaskUpdate(task) {
+    // Display task update in chat
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    messageDiv.style.backgroundColor = '#2f3136';
+
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.innerHTML = `
+      <div class="message-text">
+        <strong>🖥️ Task Update:</strong> ${task.taskId}<br>
+        Status: ${task.status.toUpperCase()}<br>
+        ${task.executionTime ? `Execution Time: ${(task.executionTime / 1000).toFixed(2)}s` : ''}
+      </div>
+    `;
+
+    messageDiv.appendChild(content);
+    this.messageContainer.appendChild(messageDiv);
+    this.scrollToBottom();
+  }
+
+  handleTaskCreated(message) {
+    // Display task created confirmation
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    messageDiv.style.backgroundColor = '#2f3136';
+
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.innerHTML = `
+      <div class="message-text">
+        <strong>✅ Task Created:</strong> ${message.taskId}<br>
+        ${message.message}
+      </div>
+    `;
+
+    messageDiv.appendChild(content);
+    this.messageContainer.appendChild(messageDiv);
+    this.scrollToBottom();
+  }
+
+  createComputeTask() {
+    const taskType = this.taskType.value;
+    
+    // Create task data based on type
+    let taskData = {};
+    let options = {};
+
+    switch (taskType) {
+      case 'cpu_compute':
+        taskData = { iterations: 5000000 };
+        break;
+      case 'hash_compute':
+        taskData = { input: 'OurWorld', iterations: 100000, algorithm: 'sha256' };
+        break;
+      case 'fibonacci':
+        taskData = { n: 35 };
+        break;
+      case 'prime_check':
+        taskData = { start: 1, end: 100000 };
+        break;
+    }
+
+    this.send({
+      type: 'create_task',
+      taskType,
+      taskData,
+      options
+    });
+
+    console.log(`Creating ${taskType} task...`);
+  }
+
+  requestComputeStats() {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.send({
+        type: 'get_compute_stats'
+      });
+    }
   }
 }
 

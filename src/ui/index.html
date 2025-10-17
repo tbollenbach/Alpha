@@ -62,18 +62,49 @@
       </div>
     </main>
 
-    <!-- Right Sidebar - Future Features -->
+    <!-- Right Sidebar - Compute Network -->
     <aside class="sidebar right-sidebar">
       <div class="sidebar-header">
-        <h3>Info</h3>
+        <h3>Compute Network</h3>
       </div>
-      <div class="info-panel">
-        <p class="placeholder-text">Future features:</p>
-        <ul class="feature-list">
-          <li>📁 File sharing</li>
-          <li>📊 Node stats</li>
-          <li>💰 Wallet view</li>
-        </ul>
+      <div class="compute-panel">
+        <!-- Network Stats -->
+        <div class="compute-stats">
+          <div class="stat-item">
+            <span class="stat-label">Nodes:</span>
+            <span id="stat-nodes" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Active:</span>
+            <span id="stat-active" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Tasks:</span>
+            <span id="stat-tasks" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Completed:</span>
+            <span id="stat-completed" class="stat-value">0</span>
+          </div>
+        </div>
+
+        <!-- Helper Nodes List -->
+        <div class="nodes-section">
+          <h4>Helper Nodes</h4>
+          <div id="nodesList" class="nodes-list"></div>
+        </div>
+
+        <!-- Task Control (Admin Only) -->
+        <div class="task-control">
+          <h4>Create Task</h4>
+          <select id="taskType" class="task-type-select">
+            <option value="cpu_compute">CPU Compute</option>
+            <option value="hash_compute">Hash Compute</option>
+            <option value="fibonacci">Fibonacci</option>
+            <option value="prime_check">Prime Check</option>
+          </select>
+          <button id="createTaskBtn" class="create-task-btn">Create Task</button>
+        </div>
       </div>
     </aside>
   </div>

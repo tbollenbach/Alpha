@@ -22,6 +22,14 @@ A Discord-like desktop chat application built with Electron and Node.js, featuri
 
 ✅ **Speaking Indicators**: See who's currently speaking with animated indicators
 
+✅ **Distributed Compute Sharing**: Connect helper nodes to share compute resources
+
+✅ **Task Distribution System**: Assign compute tasks with intelligent load balancing
+
+✅ **Resource Monitoring**: Real-time hardware stats and performance tracking
+
+✅ **API Key Authentication**: Secure node-to-coordinator connections
+
 ✅ **Dark Theme**: Modern, Discord-inspired UI
 
 ✅ **Auto-Update Checker**: Checks GitHub for new releases every 30 minutes
@@ -38,9 +46,14 @@ OurWorld/
 │   │   ├── index.html            # Main UI layout
 │   │   ├── styles.css            # Dark theme styling
 │   │   ├── client.js             # Client-side WebSocket logic
-│   │   └── audioManager.js       # WebRTC audio management
+│   │   ├── audioManager.js       # WebRTC audio management
+│   │   ├── agent.html            # Agent UI for helper nodes
+│   │   └── agentStyles.css       # Agent UI styling
 │   ├── core/
-│   │   └── websocketServer.js    # WebSocket server & message routing
+│   │   ├── websocketServer.js    # WebSocket server & message routing
+│   │   └── coordinatorServer.js  # Compute coordinator
+│   ├── modules/
+│   │   └── computeAgent.js       # Helper node agent
 │   ├── data/
 │   │   └── roles.json            # Role definitions & user assignments
 │   └── utils/
@@ -278,12 +291,193 @@ The right sidebar is reserved for:
 - 📊 Node statistics and monitoring  
 - 💰 Wallet view and transactions
 
+## Distributed Compute Sharing
+
+OurWorld Chat includes a powerful distributed compute sharing system that allows helper nodes to connect to a coordinator and share compute resources.
+
+### Architecture
+
+The system uses a **Coordinator-Agent** architecture:
+
+- **Coordinator** (Main Node): Manages helper nodes, distributes tasks, and collects results
+- **Agent** (Helper Node): Connects to coordinator, reports stats, executes tasks
+
+### Setting Up the Coordinator (Main Node)
+
+The coordinator runs automatically with the main application. No additional setup needed!
+
+### Setting Up a Helper Node
+
+To run a helper node that contributes compute power:
+
+1. **Edit `agentConfig.json`**:
+
+```json
+{
+  "enabled": true,
+  "mode": "agent",
+  "coordinatorUrl": "ws://COORDINATOR_IP:8080",
+  "apiKey": "your-api-key-here",
+  "capabilities": {
+    "cpu": true,
+    "gpu": false,
+    "memory": true
+  },
+  "limits": {
+    "maxCPUUsage": 80,
+    "maxMemoryUsage": 80
+  }
+}
+```
+
+2. **Get an API Key**:
+   - Contact the coordinator admin for an API key
+   - Keys are managed in `src/data/apiKeys.json`
+
+3. **Start the Agent**:
+
+```bash
+npm start
+```
+
+The agent will run in a minimal UI showing status and activity.
+
+### Using the Compute Network
+
+**Creating Tasks** (Admin Only):
+
+1. Open the chat application (coordinator mode)
+2. Look at the right sidebar - "Compute Network" panel
+3. Select a task type:
+   - **CPU Compute**: Intensive mathematical operations
+   - **Hash Compute**: Cryptographic hash calculations
+   - **Fibonacci**: Recursive Fibonacci calculations
+   - **Prime Check**: Find prime numbers in a range
+4. Click "Create Task"
+5. Watch as helper nodes pick up and execute the task!
+
+**Monitoring**:
+
+- **Network Stats**: See total nodes, active nodes, task counts
+- **Helper Nodes List**: View all connected nodes with their status
+- **Task Updates**: Real-time updates appear in the chat
+
+### Task Types
+
+#### CPU Compute
+```javascript
+{
+  iterations: 5000000  // Number of compute cycles
+}
+```
+
+#### Hash Compute
+```javascript
+{
+  input: 'text',
+  iterations: 100000,
+  algorithm: 'sha256'  // or 'sha512', 'md5'
+}
+```
+
+#### Fibonacci
+```javascript
+{
+  n: 35  // Calculate fibonacci(n)
+}
+```
+
+#### Prime Check
+```javascript
+{
+  start: 1,
+  end: 100000  // Find primes in range
+}
+```
+
+### Security
+
+- **API Key Authentication**: Only authorized nodes can connect
+- **TLS/HTTPS**: Use secure WebSocket (wss://) in production
+- **Permission System**: Define what each node can do
+- **Rate Limiting**: Prevent abuse (configure in coordinator)
+
+### Network Configuration
+
+Edit `config.json` for coordinator settings:
+
+```json
+{
+  "compute": {
+    "enabled": true,
+    "maxTaskQueueSize": 100,
+    "taskTimeout": 60000,
+    "heartbeatInterval": 10000,
+    "statsUpdateInterval": 5000
+  }
+}
+```
+
+### API Keys Management
+
+Edit `src/data/apiKeys.json` to manage helper node access:
+
+```json
+{
+  "keys": {
+    "alpha-node-key-001": {
+      "name": "Helper Node 001",
+      "permissions": ["compute", "report"],
+      "active": true
+    }
+  }
+}
+```
+
+**Permissions**:
+- `compute`: Can execute compute tasks
+- `report`: Can report stats
+- `admin`: Administrative access (use with caution)
+
+### Deployment
+
+**Local Network**:
+1. Set `host` to `0.0.0.0` in `config.json`
+2. Give helper nodes your local IP address
+3. Ensure port 8080 is open
+
+**Internet (Production)**:
+1. Deploy coordinator to a server (Render, AWS, etc.)
+2. Use HTTPS/WSS for secure communication
+3. Configure firewall rules
+4. Use strong API keys
+5. Consider using a reverse proxy (nginx)
+
+### Monitoring & Troubleshooting
+
+**Helper Node Issues**:
+- Check API key is correct
+- Verify coordinator URL is reachable
+- Ensure network/firewall allows outbound connections
+- Check agent.html UI for error messages
+
+**Task Issues**:
+- Tasks timeout after 60 seconds by default
+- Failed tasks are logged and can be retried
+- Check node capabilities match task requirements
+
+**Connection Issues**:
+- Nodes send heartbeat every 10 seconds
+- Coordinator removes nodes after 30s of no heartbeat
+- Agents automatically reconnect on disconnect
+
 ## Technical Details
 
 - **Frontend**: HTML, CSS, Vanilla JavaScript
 - **Backend**: Node.js with WebSocket (ws library)
 - **Desktop Framework**: Electron
 - **Architecture**: Client-server with real-time bidirectional communication
+- **Compute System**: Coordinator-Agent with WebRTC for peer-to-peer audio
 
 ## License
 

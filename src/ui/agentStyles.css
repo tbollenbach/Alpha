@@ -1,0 +1,166 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #2c2f33;
+  color: #dcddde;
+  padding: 20px;
+}
+
+.agent-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.agent-header {
+  background-color: #36393f;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.agent-header h1 {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: #faa61a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-badge.connected {
+  background-color: #43b581;
+}
+
+.agent-info,
+.agent-stats,
+.current-task,
+.agent-log {
+  background-color: #36393f;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #ffffff;
+  border-bottom: 2px solid #4ecdc4;
+  padding-bottom: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #8e9297;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 16px;
+  color: #dcddde;
+  font-weight: 500;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.stat-box {
+  background-color: #2f3136;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #8e9297;
+  margin-bottom: 8px;
+}
+
+.stat-value-large {
+  font-size: 28px;
+  font-weight: bold;
+  color: #4ecdc4;
+}
+
+.task-info {
+  padding: 15px;
+  background-color: #2f3136;
+  border-radius: 6px;
+  min-height: 60px;
+}
+
+.no-task {
+  color: #8e9297;
+  font-style: italic;
+  text-align: center;
+  line-height: 30px;
+}
+
+.log-container {
+  background-color: #2f3136;
+  border-radius: 6px;
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.log-entry {
+  padding: 5px;
+  border-bottom: 1px solid #36393f;
+  color: #b9bbbe;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2f3136;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #202225;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1a1c1e;
+}
+
