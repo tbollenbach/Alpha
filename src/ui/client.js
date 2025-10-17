@@ -58,6 +58,8 @@ class ChatClient {
     this.statGpus = document.getElementById('stat-gpus');
     this.statTasks = document.getElementById('stat-tasks');
     this.statCompleted = document.getElementById('stat-completed');
+    this.enableCompute = document.getElementById('enableCompute');
+    this.autoAccept = document.getElementById('autoAccept');
 
     // Event listeners
     this.joinBtn.addEventListener('click', () => this.handleJoin());
@@ -78,6 +80,8 @@ class ChatClient {
 
     // Compute network event listeners
     this.createTaskBtn.addEventListener('click', () => this.createComputeTask());
+    this.enableCompute.addEventListener('change', () => this.toggleComputeSharing());
+    this.autoAccept.addEventListener('change', () => this.toggleAutoAccept());
 
     // Focus username input
     this.usernameInput.focus();
@@ -693,15 +697,32 @@ class ChatClient {
     nodes.forEach(node => {
       const nodeItem = document.createElement('div');
       nodeItem.className = 'node-item';
+      nodeItem.dataset.nodeId = node.nodeId;
+      
       if (node.status === 'working') {
         nodeItem.classList.add('working');
       } else if (node.status === 'offline') {
         nodeItem.classList.add('offline');
       }
 
+      // Node header with toggle
+      const nodeHeader = document.createElement('div');
+      nodeHeader.className = 'node-header';
+
       const nodeName = document.createElement('div');
       nodeName.className = 'node-name';
       nodeName.textContent = node.hostname || node.nodeId;
+
+      const nodeToggle = document.createElement('input');
+      nodeToggle.type = 'checkbox';
+      nodeToggle.className = 'node-toggle';
+      nodeToggle.checked = node.enabled !== false; // Default to enabled
+      nodeToggle.addEventListener('change', (e) => {
+        this.toggleNode(node.nodeId, e.target.checked);
+      });
+
+      nodeHeader.appendChild(nodeName);
+      nodeHeader.appendChild(nodeToggle);
 
       const nodeStatus = document.createElement('div');
       nodeStatus.className = 'node-status';
@@ -711,7 +732,7 @@ class ChatClient {
       nodeProgress.className = 'node-progress';
       nodeProgress.textContent = `✅ ${node.tasksCompleted} | ❌ ${node.tasksFailed}`;
 
-      nodeItem.appendChild(nodeName);
+      nodeItem.appendChild(nodeHeader);
       nodeItem.appendChild(nodeStatus);
       nodeItem.appendChild(nodeProgress);
 
@@ -807,6 +828,49 @@ class ChatClient {
       this.send({
         type: 'get_compute_stats'
       });
+    }
+  }
+
+  toggleComputeSharing() {
+    const enabled = this.enableCompute.checked;
+    console.log(`Compute sharing ${enabled ? 'enabled' : 'disabled'}`);
+    
+    // Send to server
+    this.send({
+      type: 'toggle_compute_sharing',
+      enabled
+    });
+  }
+
+  toggleAutoAccept() {
+    const enabled = this.autoAccept.checked;
+    console.log(`Auto-accept tasks ${enabled ? 'enabled' : 'disabled'}`);
+    
+    // Send to server
+    this.send({
+      type: 'toggle_auto_accept',
+      enabled
+    });
+  }
+
+  toggleNode(nodeId, enabled) {
+    console.log(`Node ${nodeId} ${enabled ? 'enabled' : 'disabled'}`);
+    
+    // Send to server
+    this.send({
+      type: 'toggle_node',
+      nodeId,
+      enabled
+    });
+
+    // Update visual state
+    const nodeItem = document.querySelector(`[data-node-id="${nodeId}"]`);
+    if (nodeItem) {
+      if (enabled) {
+        nodeItem.classList.remove('disabled');
+      } else {
+        nodeItem.classList.add('disabled');
+      }
     }
   }
 

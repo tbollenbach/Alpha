@@ -14,6 +14,8 @@ class CoordinatorServer {
     this.taskQueue = []; // Array of taskIds waiting to be assigned
     this.apiKeys = this.loadApiKeys();
     this.config = this.loadConfig();
+    this.computeSharingEnabled = true;
+    this.autoAcceptEnabled = true;
     
     // Start heartbeat checker
     this.startHeartbeatChecker();
@@ -540,6 +542,68 @@ class CoordinatorServer {
     if (cleaned > 0) {
       console.log(`Cleaned up ${cleaned} old tasks`);
     }
+  }
+
+  /**
+   * Toggle compute sharing globally
+   */
+  setComputeSharingEnabled(enabled) {
+    this.computeSharingEnabled = enabled;
+    console.log(`Compute sharing ${enabled ? 'enabled' : 'disabled'} globally`);
+    
+    // Broadcast to all connected UI clients
+    if (this.wsServer) {
+      this.wsServer.broadcast(JSON.stringify({
+        type: 'compute_sharing_toggled',
+        enabled
+      }));
+    }
+  }
+
+  /**
+   * Toggle auto-accept globally
+   */
+  setAutoAcceptEnabled(enabled) {
+    this.autoAcceptEnabled = enabled;
+    console.log(`Auto-accept ${enabled ? 'enabled' : 'disabled'} globally`);
+    
+    // Broadcast to all connected UI clients
+    if (this.wsServer) {
+      this.wsServer.broadcast(JSON.stringify({
+        type: 'auto_accept_toggled',
+        enabled
+      }));
+    }
+  }
+
+  /**
+   * Toggle individual node
+   */
+  toggleNode(nodeId, enabled) {
+    const node = this.helperNodes.get(nodeId);
+    if (!node) {
+      console.log(`Node ${nodeId} not found`);
+      return;
+    }
+
+    node.enabled = enabled;
+    
+    if (!enabled) {
+      // If disabling, reassign any tasks this node was working on
+      this.tasks.forEach((task, taskId) => {
+        if (task.assignedTo === nodeId && task.status === 'running') {
+          task.status = 'pending';
+          task.assignedTo = null;
+          this.taskQueue.push(taskId);
+          console.log(`Task ${taskId} reassigned due to node ${nodeId} being disabled`);
+        }
+      });
+    }
+
+    console.log(`Node ${nodeId} ${enabled ? 'enabled' : 'disabled'}`);
+    
+    // Broadcast updated node list
+    this.broadcastNodeList();
   }
 }
 

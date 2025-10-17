@@ -101,6 +101,15 @@ class WebSocketServer {
         case 'get_compute_stats':
           this.handleGetComputeStats(ws, data);
           break;
+        case 'toggle_compute_sharing':
+          this.handleToggleComputeSharing(ws, data);
+          break;
+        case 'toggle_auto_accept':
+          this.handleToggleAutoAccept(ws, data);
+          break;
+        case 'toggle_node':
+          this.handleToggleNode(ws, data);
+          break;
         default:
           console.log('Unknown message type:', data.type);
       }
@@ -434,6 +443,66 @@ class WebSocketServer {
         type: 'compute_stats',
         stats
       }));
+    }
+  }
+
+  handleToggleComputeSharing(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    // Check if user has permission (admin only)
+    const roleData = this.roles.roles[client.role];
+    if (!roleData.permissions.includes('all')) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'You do not have permission to toggle compute sharing'
+      }));
+      return;
+    }
+
+    if (this.coordinator) {
+      this.coordinator.setComputeSharingEnabled(data.enabled);
+      console.log(`Compute sharing ${data.enabled ? 'enabled' : 'disabled'} by ${client.username}`);
+    }
+  }
+
+  handleToggleAutoAccept(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    // Check if user has permission (admin only)
+    const roleData = this.roles.roles[client.role];
+    if (!roleData.permissions.includes('all')) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'You do not have permission to toggle auto-accept'
+      }));
+      return;
+    }
+
+    if (this.coordinator) {
+      this.coordinator.setAutoAcceptEnabled(data.enabled);
+      console.log(`Auto-accept ${data.enabled ? 'enabled' : 'disabled'} by ${client.username}`);
+    }
+  }
+
+  handleToggleNode(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    // Check if user has permission (admin only)
+    const roleData = this.roles.roles[client.role];
+    if (!roleData.permissions.includes('all')) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'You do not have permission to toggle nodes'
+      }));
+      return;
+    }
+
+    if (this.coordinator) {
+      this.coordinator.toggleNode(data.nodeId, data.enabled);
+      console.log(`Node ${data.nodeId} ${data.enabled ? 'enabled' : 'disabled'} by ${client.username}`);
     }
   }
 

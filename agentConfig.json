@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "mode": "agent",
   "coordinatorUrl": "ws://localhost:8080",
   "apiKey": "demo-key-12345",
