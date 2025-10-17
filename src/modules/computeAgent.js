@@ -67,6 +67,31 @@ class ComputeAgent {
   }
 
   /**
+   * Start local agent (direct connection to coordinator, no WebSocket)
+   */
+  async startLocal() {
+    console.log('Starting local compute agent (direct connection)...');
+    
+    // For local agent, register directly with coordinator
+    const nodeInfo = this.collectNodeInfo();
+    const nodeId = `local-${Date.now()}`;
+    
+    // Simulate registration with coordinator
+    console.log(`Local agent registered: ${nodeInfo.hostname} (${nodeId})`);
+    
+    // Start intervals for stats reporting
+    this.startIntervals();
+    this.isRunning = true;
+    
+    // Register with coordinator directly (no WebSocket needed)
+    if (global.coordinatorServer) {
+      global.coordinatorServer.registerLocalNode(nodeId, nodeInfo);
+    }
+    
+    return true;
+  }
+
+  /**
    * Connect to coordinator server
    */
   connect(url) {

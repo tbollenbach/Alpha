@@ -72,20 +72,16 @@ app.whenReady().then(async () => {
     console.log('Starting local compute agent...');
     computeAgent = new ComputeAgent(true); // true = isLocalAgent
     
-    // Wait a moment for the WebSocket server to be ready, then start agent
+    // Start local agent immediately - no WebSocket needed for local coordinator
     setTimeout(async () => {
       try {
-        console.log('Attempting to start local compute agent...');
-        const success = await computeAgent.start();
-        if (success) {
-          console.log('✅ Local compute agent started successfully');
-        } else {
-          console.log('❌ Local compute agent failed to start');
-        }
+        console.log('Starting local compute agent (direct connection)...');
+        await computeAgent.startLocal();
+        console.log('✅ Local compute agent started successfully');
       } catch (error) {
         console.error('❌ Failed to start local compute agent:', error);
       }
-    }, 3000);
+    }, 1000);
   }
 
   app.on('activate', () => {

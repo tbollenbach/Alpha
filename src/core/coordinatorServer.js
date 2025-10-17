@@ -611,6 +611,31 @@ class CoordinatorServer {
     // Broadcast updated node list
     this.broadcastNodeList();
   }
+
+  /**
+   * Register local node directly (no WebSocket)
+   */
+  registerLocalNode(nodeId, nodeInfo) {
+    console.log(`Registering local node: ${nodeInfo.hostname} (${nodeId})`);
+    
+    this.helperNodes.set(nodeId, {
+      ws: null, // No WebSocket for local node
+      info: nodeInfo,
+      stats: {},
+      status: 'idle',
+      lastHeartbeat: Date.now(),
+      tasksCompleted: 0,
+      tasksFailed: 0,
+      currentTask: null,
+      enabled: true
+    });
+
+    // Broadcast updated stats
+    this.broadcastNodeList();
+    this.broadcastComputeStats();
+    
+    console.log(`Local node registered successfully: ${nodeInfo.hostname}`);
+  }
 }
 
 module.exports = CoordinatorServer;

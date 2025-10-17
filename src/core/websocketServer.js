@@ -31,8 +31,11 @@ class WebSocketServer {
 
     console.log(`WebSocket server started on 0.0.0.0:${port} (accessible from LAN)`);
 
-    // Initialize coordinator server
-    this.coordinator = new CoordinatorServer(this);
+        // Initialize coordinator server
+        this.coordinator = new CoordinatorServer(this);
+        
+        // Make coordinator globally accessible for local agent
+        global.coordinatorServer = this.coordinator;
 
     this.wss.on('connection', (ws) => {
       console.log('New client connected');
