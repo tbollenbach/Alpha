@@ -53,6 +53,9 @@ class ComputeAgent {
     const coordinatorUrl = this.config.agent.coordinatorUrl || 
       `ws://${this.config.websocket.host}:${this.config.websocket.port}`;
     
+    console.log(`Connecting to: ${coordinatorUrl}`);
+    console.log(`Agent config:`, this.config.agent);
+    
     try {
       await this.connect(coordinatorUrl);
       this.isRunning = true;
