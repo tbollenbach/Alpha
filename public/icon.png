@@ -1,0 +1,3 @@
+PNG placeholder - In a real implementation, this would be a binary PNG file.
+For now, the app will work without the icon, or you can add your own icon.png file to the public/ directory.
+

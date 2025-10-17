@@ -1,0 +1,15 @@
+{
+  "websocket": {
+    "port": 8080,
+    "host": "localhost"
+  },
+  "update": {
+    "githubRepo": "yourusername/ourworld-chat",
+    "checkInterval": 1800000
+  },
+  "app": {
+    "defaultRoom": "#AlphaLobby",
+    "theme": "dark"
+  }
+}
+

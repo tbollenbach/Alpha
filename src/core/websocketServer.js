@@ -1,0 +1,283 @@
+const WebSocket = require('ws');
+const fs = require('fs');
+const path = require('path');
+
+class WebSocketServer {
+  constructor() {
+    this.wss = null;
+    this.clients = new Map(); // userId -> { ws, username, role, status }
+    this.config = this.loadConfig();
+    this.roles = this.loadRoles();
+  }
+
+  loadConfig() {
+    const configPath = path.join(__dirname, '../../config.json');
+    return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  }
+
+  loadRoles() {
+    const rolesPath = path.join(__dirname, '../data/roles.json');
+    return JSON.parse(fs.readFileSync(rolesPath, 'utf8'));
+  }
+
+  start() {
+    const port = this.config.websocket.port;
+    this.wss = new WebSocket.Server({ port });
+
+    console.log(`WebSocket server started on port ${port}`);
+
+    this.wss.on('connection', (ws) => {
+      console.log('New client connected');
+
+      ws.on('message', (message) => {
+        this.handleMessage(ws, message);
+      });
+
+      ws.on('close', () => {
+        this.handleDisconnect(ws);
+      });
+
+      ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+      });
+    });
+  }
+
+  handleMessage(ws, message) {
+    try {
+      const data = JSON.parse(message);
+
+      switch (data.type) {
+        case 'auth':
+          this.handleAuth(ws, data);
+          break;
+        case 'chat':
+          this.handleChatMessage(ws, data);
+          break;
+        case 'dm':
+          this.handleDirectMessage(ws, data);
+          break;
+        case 'status':
+          this.handleStatusChange(ws, data);
+          break;
+        case 'typing':
+          this.handleTyping(ws, data);
+          break;
+        default:
+          console.log('Unknown message type:', data.type);
+      }
+    } catch (error) {
+      console.error('Error handling message:', error);
+    }
+  }
+
+  handleAuth(ws, data) {
+    const { username } = data;
+    const userId = this.generateUserId();
+    
+    // Assign role (default to 'member' if not specified)
+    const role = this.roles.users[username] || 'member';
+    
+    this.clients.set(userId, {
+      ws,
+      username,
+      role,
+      status: 'online'
+    });
+
+    // Send auth success
+    ws.send(JSON.stringify({
+      type: 'auth_success',
+      userId,
+      username,
+      role,
+      roleData: this.roles.roles[role]
+    }));
+
+    // Broadcast user list update
+    this.broadcastUserList();
+
+    // Send recent message history (if any)
+    this.sendMessageHistory(ws);
+  }
+
+  handleChatMessage(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    const { room, message } = data;
+    
+    // Check if user has permission to write
+    const roleData = this.roles.roles[client.role];
+    if (!roleData.permissions.includes('write') && !roleData.permissions.includes('all')) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'You do not have permission to send messages'
+      }));
+      return;
+    }
+
+    // Broadcast message to all clients in the room
+    const messageData = {
+      type: 'chat',
+      room,
+      username: client.username,
+      role: client.role,
+      message,
+      timestamp: new Date().toISOString()
+    };
+
+    this.broadcastToRoom(room, messageData);
+  }
+
+  handleDirectMessage(ws, data) {
+    const sender = this.getClientByWs(ws);
+    if (!sender) return;
+
+    const { recipientUsername, message } = data;
+    
+    // Find recipient
+    const recipient = this.getClientByUsername(recipientUsername);
+    
+    if (!recipient) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'User not found or offline'
+      }));
+      return;
+    }
+
+    const dmData = {
+      type: 'dm',
+      from: sender.username,
+      to: recipientUsername,
+      message,
+      timestamp: new Date().toISOString()
+    };
+
+    // Send to recipient
+    recipient.ws.send(JSON.stringify(dmData));
+    
+    // Send confirmation to sender
+    ws.send(JSON.stringify({
+      ...dmData,
+      type: 'dm_sent'
+    }));
+  }
+
+  handleStatusChange(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    client.status = data.status;
+    this.broadcastUserList();
+  }
+
+  handleTyping(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    const { room, isTyping } = data;
+
+    // Broadcast typing indicator to all clients in the room
+    this.broadcastToRoom(room, {
+      type: 'typing',
+      username: client.username,
+      isTyping
+    }, ws);
+  }
+
+  handleDisconnect(ws) {
+    const client = this.getClientByWs(ws);
+    if (client) {
+      console.log(`Client disconnected: ${client.username}`);
+      
+      // Remove client
+      for (const [userId, clientData] of this.clients.entries()) {
+        if (clientData.ws === ws) {
+          this.clients.delete(userId);
+          break;
+        }
+      }
+
+      // Broadcast updated user list
+      this.broadcastUserList();
+    }
+  }
+
+  broadcastUserList() {
+    const users = Array.from(this.clients.values()).map(client => ({
+      username: client.username,
+      role: client.role,
+      status: client.status,
+      roleColor: this.roles.roles[client.role].color
+    }));
+
+    const message = JSON.stringify({
+      type: 'user_list',
+      users
+    });
+
+    this.broadcast(message);
+  }
+
+  broadcastToRoom(room, data, excludeWs = null) {
+    const message = JSON.stringify(data);
+
+    this.clients.forEach(client => {
+      const roleData = this.roles.roles[client.role];
+      
+      // Check if client has access to this room
+      if (roleData.rooms.includes(room) && client.ws !== excludeWs) {
+        client.ws.send(message);
+      }
+    });
+  }
+
+  broadcast(message) {
+    this.clients.forEach(client => {
+      client.ws.send(message);
+    });
+  }
+
+  sendMessageHistory(ws) {
+    // For MVP, we're not storing message history
+    // This can be implemented later with a database
+    ws.send(JSON.stringify({
+      type: 'message_history',
+      messages: []
+    }));
+  }
+
+  getClientByWs(ws) {
+    for (const client of this.clients.values()) {
+      if (client.ws === ws) {
+        return client;
+      }
+    }
+    return null;
+  }
+
+  getClientByUsername(username) {
+    for (const client of this.clients.values()) {
+      if (client.username === username) {
+        return client;
+      }
+    }
+    return null;
+  }
+
+  generateUserId() {
+    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  stop() {
+    if (this.wss) {
+      this.wss.close();
+      console.log('WebSocket server stopped');
+    }
+  }
+}
+
+module.exports = WebSocketServer;
+

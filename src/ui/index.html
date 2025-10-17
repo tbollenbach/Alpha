@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OurWorld Chat</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Auth Modal -->
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+      <h2>Welcome to OurWorld Chat</h2>
+      <p>Choose your username to get started</p>
+      <input type="text" id="usernameInput" placeholder="Enter username..." maxlength="20">
+      <button id="joinBtn">Join Chat</button>
+      <div id="authError" class="error-message"></div>
+    </div>
+  </div>
+
+  <!-- Main App Container -->
+  <div id="app" class="app-container" style="display: none;">
+    <!-- Left Sidebar - User List -->
+    <aside class="sidebar left-sidebar">
+      <div class="sidebar-header">
+        <h3>Online Users</h3>
+        <span id="userCount" class="user-count">0</span>
+      </div>
+      <div id="userList" class="user-list"></div>
+    </aside>
+
+    <!-- Center Panel - Chat Room -->
+    <main class="main-panel">
+      <div class="chat-header">
+        <h2 id="currentRoom">#AlphaLobby</h2>
+        <div class="user-info">
+          <span id="currentUsername"></span>
+          <span id="currentRole" class="role-badge"></span>
+        </div>
+      </div>
+      
+      <div id="messageContainer" class="message-container"></div>
+      
+      <div class="typing-indicator" id="typingIndicator"></div>
+      
+      <div class="message-input-container">
+        <input 
+          type="text" 
+          id="messageInput" 
+          placeholder="Type a message..."
+          maxlength="500"
+          autocomplete="off"
+        >
+        <button id="sendBtn">Send</button>
+      </div>
+    </main>
+
+    <!-- Right Sidebar - Future Features -->
+    <aside class="sidebar right-sidebar">
+      <div class="sidebar-header">
+        <h3>Info</h3>
+      </div>
+      <div class="info-panel">
+        <p class="placeholder-text">Future features:</p>
+        <ul class="feature-list">
+          <li>📁 File sharing</li>
+          <li>📊 Node stats</li>
+          <li>💰 Wallet view</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <!-- DM Window Template (Hidden, will be cloned) -->
+  <div id="dmWindowTemplate" class="dm-window" style="display: none;">
+    <div class="dm-header">
+      <span class="dm-username"></span>
+      <button class="dm-close">×</button>
+    </div>
+    <div class="dm-messages"></div>
+    <div class="dm-input-container">
+      <input type="text" class="dm-input" placeholder="Type a message..." maxlength="500">
+      <button class="dm-send">Send</button>
+    </div>
+  </div>
+
+  <script src="client.js"></script>
+</body>
+</html>
+

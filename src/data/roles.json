@@ -1,0 +1,28 @@
+{
+  "roles": {
+    "admin": {
+      "name": "Admin",
+      "permissions": ["all"],
+      "rooms": ["#AlphaLobby"],
+      "color": "#ff6b6b"
+    },
+    "member": {
+      "name": "Member",
+      "permissions": ["read", "write", "dm"],
+      "rooms": ["#AlphaLobby"],
+      "color": "#4ecdc4"
+    },
+    "guest": {
+      "name": "Guest",
+      "permissions": ["read"],
+      "rooms": ["#AlphaLobby"],
+      "color": "#95a5a6"
+    }
+  },
+  "users": {
+    "user1": "admin",
+    "user2": "member",
+    "user3": "guest"
+  }
+}
+
