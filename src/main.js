@@ -71,7 +71,16 @@ app.whenReady().then(async () => {
     // Also start compute agent to contribute this machine's resources
     console.log('Starting local compute agent...');
     computeAgent = new ComputeAgent();
-    await computeAgent.start();
+    
+    // Wait a moment for the WebSocket server to be ready, then start agent
+    setTimeout(async () => {
+      try {
+        await computeAgent.start();
+        console.log('Local compute agent started successfully');
+      } catch (error) {
+        console.error('Failed to start local compute agent:', error);
+      }
+    }, 3000);
   }
 
   app.on('activate', () => {

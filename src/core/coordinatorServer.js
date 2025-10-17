@@ -127,6 +127,7 @@ class CoordinatorServer {
 
     // Broadcast node list update to UI
     this.broadcastNodeList();
+    this.broadcastComputeStats();
 
     console.log(`Helper node registered: ${nodeId} (${nodeInfo.hostname || 'unknown'})`);
   }
