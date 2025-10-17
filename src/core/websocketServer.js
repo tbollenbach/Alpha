@@ -22,9 +22,12 @@ class WebSocketServer {
 
   start() {
     const port = this.config.websocket.port;
-    this.wss = new WebSocket.Server({ port });
+    this.wss = new WebSocket.Server({ 
+      port,
+      host: '0.0.0.0' // Listen on all network interfaces for LAN access
+    });
 
-    console.log(`WebSocket server started on port ${port}`);
+    console.log(`WebSocket server started on 0.0.0.0:${port} (accessible from LAN)`);
 
     this.wss.on('connection', (ws) => {
       console.log('New client connected');

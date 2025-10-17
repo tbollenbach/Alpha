@@ -81,13 +81,14 @@ class ChatClient {
   }
 
   connect() {
-    const wsUrl = `ws://${this.config.websocket.host}:${this.config.websocket.port}`;
+    // Hardcoded server IP - connects to central server at 192.168.1.211
+    const wsUrl = 'ws://192.168.1.211:8080';
     
     try {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('Connected to server');
+        console.log('Connected to server at 192.168.1.211:8080');
         this.authenticate();
       });
 
@@ -102,11 +103,11 @@ class ChatClient {
 
       this.ws.on('error', (error) => {
         console.error('WebSocket error:', error);
-        this.showAuthError('Failed to connect to server');
+        this.showAuthError('Failed to connect to server at 192.168.1.211:8080');
       });
     } catch (error) {
       console.error('Connection error:', error);
-      this.showAuthError('Failed to connect to server');
+      this.showAuthError('Failed to connect to server at 192.168.1.211:8080');
     }
   }
 
