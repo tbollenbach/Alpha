@@ -17,6 +17,11 @@
     "taskTimeout": 60000,
     "heartbeatInterval": 10000,
     "statsUpdateInterval": 5000
+  },
+  "agent": {
+    "enabled": true,
+    "coordinatorUrl": "ws://127.0.0.1:8080",
+    "apiKey": "local-coordinator-agent"
   }
 }
 
