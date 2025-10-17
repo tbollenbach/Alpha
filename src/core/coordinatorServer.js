@@ -487,6 +487,21 @@ class CoordinatorServer {
     const nodes = Array.from(this.helperNodes.values());
     const tasks = Array.from(this.tasks.values());
 
+    // Calculate combined resources
+    const totalCPUCores = nodes.reduce((sum, n) => sum + (n.info.cpuCores || 0), 0);
+    const totalMemory = nodes.reduce((sum, n) => sum + (n.info.totalMemory || 0), 0);
+    const totalGPUs = nodes.reduce((sum, n) => sum + (n.info.gpuCount || 0), 0);
+    
+    // Calculate average CPU usage across all nodes
+    const avgCPUUsage = nodes.length > 0 
+      ? nodes.reduce((sum, n) => sum + (n.stats.cpuUsage || 0), 0) / nodes.length 
+      : 0;
+    
+    // Calculate average memory usage across all nodes
+    const avgMemoryUsage = nodes.length > 0
+      ? nodes.reduce((sum, n) => sum + (n.stats.memoryUsage || 0), 0) / nodes.length
+      : 0;
+
     return {
       totalNodes: nodes.length,
       activeNodes: nodes.filter(n => n.status === 'working').length,
@@ -496,8 +511,13 @@ class CoordinatorServer {
       runningTasks: tasks.filter(t => t.status === 'running').length,
       completedTasks: tasks.filter(t => t.status === 'completed').length,
       failedTasks: tasks.filter(t => t.status === 'failed').length,
-      totalCPUCores: nodes.reduce((sum, n) => sum + (n.info.cpuCores || 0), 0),
-      totalMemory: nodes.reduce((sum, n) => sum + (n.info.totalMemory || 0), 0)
+      totalCPUCores,
+      totalMemory,
+      totalGPUs,
+      avgCPUUsage: Math.round(avgCPUUsage),
+      avgMemoryUsage: Math.round(avgMemoryUsage),
+      totalTasksCompleted: nodes.reduce((sum, n) => sum + (n.tasksCompleted || 0), 0),
+      totalTasksFailed: nodes.reduce((sum, n) => sum + (n.tasksFailed || 0), 0)
     };
   }
 

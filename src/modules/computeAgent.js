@@ -115,6 +115,7 @@ class ComputeAgent {
       cpuCores: os.cpus().length,
       cpuModel: os.cpus()[0].model,
       totalMemory: os.totalmem(),
+      gpuCount: this.detectGPUCount(),
       nodeVersion: process.version,
       capabilities: this.detectCapabilities()
     };
@@ -134,6 +135,20 @@ class ComputeAgent {
     }
 
     return capabilities;
+  }
+
+  /**
+   * Detect GPU count (placeholder - real implementation would use proper detection)
+   */
+  detectGPUCount() {
+    // This is a simplified detection - in production you'd use:
+    // - nvidia-smi for NVIDIA GPUs
+    // - AMD GPU detection tools
+    // - OpenCL/CUDA runtime detection
+    
+    // For demo purposes, randomly assign 0-2 GPUs
+    const hasGPU = Math.random() > 0.7; // 30% chance of having GPU
+    return hasGPU ? Math.floor(Math.random() * 2) + 1 : 0;
   }
 
   /**

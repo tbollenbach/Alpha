@@ -53,6 +53,9 @@ class ChatClient {
     this.taskType = document.getElementById('taskType');
     this.statNodes = document.getElementById('stat-nodes');
     this.statActive = document.getElementById('stat-active');
+    this.statCores = document.getElementById('stat-cores');
+    this.statMemory = document.getElementById('stat-memory');
+    this.statGpus = document.getElementById('stat-gpus');
     this.statTasks = document.getElementById('stat-tasks');
     this.statCompleted = document.getElementById('stat-completed');
 
@@ -81,6 +84,13 @@ class ChatClient {
     
     // Request compute stats periodically
     setInterval(() => this.requestComputeStats(), 5000);
+    
+    // Demo mode - add some fake nodes for testing
+    if (window.location.href.includes('localhost')) {
+      setTimeout(() => {
+        this.addDemoNodes();
+      }, 2000);
+    }
   }
 
   handleJoin() {
@@ -719,6 +729,9 @@ class ChatClient {
   updateComputeStats(stats) {
     this.statNodes.textContent = stats.totalNodes;
     this.statActive.textContent = stats.activeNodes;
+    this.statCores.textContent = stats.totalCPUCores;
+    this.statMemory.textContent = (stats.totalMemory / (1024**3)).toFixed(1) + ' GB';
+    this.statGpus.textContent = stats.totalGPUs || 0;
     this.statTasks.textContent = stats.pendingTasks + stats.runningTasks;
     this.statCompleted.textContent = stats.completedTasks;
   }
@@ -802,6 +815,66 @@ class ChatClient {
         type: 'get_compute_stats'
       });
     }
+  }
+
+  addDemoNodes() {
+    // Add demo nodes for testing
+    const demoNodes = [
+      {
+        nodeId: 'demo-node-001',
+        hostname: 'Alpha-Node-001',
+        platform: 'Windows',
+        cpuCores: 8,
+        totalMemory: 16 * 1024**3,
+        gpuCount: 1,
+        status: 'idle',
+        stats: { cpuUsage: 25, memoryUsage: 60 },
+        tasksCompleted: 12,
+        tasksFailed: 1,
+        registeredAt: Date.now() - 300000
+      },
+      {
+        nodeId: 'demo-node-002', 
+        hostname: 'Beta-Node-002',
+        platform: 'Linux',
+        cpuCores: 4,
+        totalMemory: 8 * 1024**3,
+        gpuCount: 0,
+        status: 'working',
+        stats: { cpuUsage: 85, memoryUsage: 45 },
+        tasksCompleted: 8,
+        tasksFailed: 0,
+        registeredAt: Date.now() - 180000
+      },
+      {
+        nodeId: 'demo-node-003',
+        hostname: 'Gamma-Node-003', 
+        platform: 'Windows',
+        cpuCores: 12,
+        totalMemory: 32 * 1024**3,
+        gpuCount: 2,
+        status: 'idle',
+        stats: { cpuUsage: 15, memoryUsage: 30 },
+        tasksCompleted: 25,
+        tasksFailed: 2,
+        registeredAt: Date.now() - 600000
+      }
+    ];
+
+    this.updateComputeNodes(demoNodes);
+    this.updateComputeStats({
+      totalNodes: 3,
+      activeNodes: 1,
+      totalCPUCores: 24, // 8 + 4 + 12
+      totalMemory: 56 * 1024**3, // 16 + 8 + 32 GB
+      totalGPUs: 3, // 1 + 0 + 2
+      pendingTasks: 5,
+      runningTasks: 2,
+      completedTasks: 45, // 12 + 8 + 25
+      failedTasks: 3 // 1 + 0 + 2
+    });
+
+    console.log('Demo nodes added for testing');
   }
 }
 
