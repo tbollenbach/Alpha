@@ -11,6 +11,12 @@
       "permissions": ["compute", "report", "admin"],
       "active": true,
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    "local-coordinator-agent": {
+      "name": "Local Coordinator Agent",
+      "permissions": ["compute", "report"],
+      "active": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
     }
   },
   "description": "API keys for helper nodes to connect to the coordinator. Keep these secure!"

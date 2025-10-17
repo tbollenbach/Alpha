@@ -67,6 +67,11 @@ app.whenReady().then(async () => {
 
     // Start update checker
     updateChecker.start();
+
+    // Also start compute agent to contribute this machine's resources
+    console.log('Starting local compute agent...');
+    computeAgent = new ComputeAgent();
+    await computeAgent.start();
   }
 
   app.on('activate', () => {

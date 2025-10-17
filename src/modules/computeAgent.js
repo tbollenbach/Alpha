@@ -97,9 +97,12 @@ class ComputeAgent {
   register() {
     const nodeInfo = this.collectNodeInfo();
     
+    // Use local agent key for the coordinator's own agent
+    const apiKey = this.config.agent.apiKey || 'local-coordinator-agent';
+    
     this.send({
       type: 'node_register',
-      apiKey: this.config.agent.apiKey || 'demo-key-12345',
+      apiKey,
       nodeInfo
     });
   }
