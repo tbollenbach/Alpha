@@ -88,6 +88,11 @@ class ChatClient {
     
     // Request compute stats periodically
     setInterval(() => this.requestComputeStats(), 5000);
+    
+    // Add demo data temporarily to show what it should look like
+    setTimeout(() => {
+      this.addDemoData();
+    }, 3000);
   }
 
   handleJoin() {
@@ -872,6 +877,40 @@ class ChatClient {
         nodeItem.classList.add('disabled');
       }
     }
+  }
+
+  addDemoData() {
+    // Add demo nodes to show what the interface should look like
+    const demoNodes = [
+      {
+        nodeId: 'local-demo-001',
+        hostname: 'Local-Machine',
+        platform: 'Windows',
+        cpuCores: 8,
+        totalMemory: 16 * 1024**3,
+        gpuCount: 1,
+        status: 'idle',
+        stats: { cpuUsage: 25, memoryUsage: 60 },
+        tasksCompleted: 0,
+        tasksFailed: 0,
+        enabled: true
+      }
+    ];
+
+    this.updateComputeNodes(demoNodes);
+    this.updateComputeStats({
+      totalNodes: 1,
+      activeNodes: 0,
+      totalCPUCores: 8,
+      totalMemory: 16 * 1024**3,
+      totalGPUs: 1,
+      pendingTasks: 0,
+      runningTasks: 0,
+      completedTasks: 0,
+      failedTasks: 0
+    });
+
+    console.log('Demo data added to show interface');
   }
 
 }

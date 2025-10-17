@@ -489,6 +489,8 @@ class CoordinatorServer {
     const nodes = Array.from(this.helperNodes.values());
     const tasks = Array.from(this.tasks.values());
 
+    console.log(`Getting network stats: ${nodes.length} nodes connected`);
+
     // Calculate combined resources
     const totalCPUCores = nodes.reduce((sum, n) => sum + (n.info.cpuCores || 0), 0);
     const totalMemory = nodes.reduce((sum, n) => sum + (n.info.totalMemory || 0), 0);
@@ -504,7 +506,7 @@ class CoordinatorServer {
       ? nodes.reduce((sum, n) => sum + (n.stats.memoryUsage || 0), 0) / nodes.length
       : 0;
 
-    return {
+    const stats = {
       totalNodes: nodes.length,
       activeNodes: nodes.filter(n => n.status === 'working').length,
       idleNodes: nodes.filter(n => n.status === 'idle').length,
@@ -521,6 +523,9 @@ class CoordinatorServer {
       totalTasksCompleted: nodes.reduce((sum, n) => sum + (n.tasksCompleted || 0), 0),
       totalTasksFailed: nodes.reduce((sum, n) => sum + (n.tasksFailed || 0), 0)
     };
+
+    console.log('Network stats:', stats);
+    return stats;
   }
 
   /**
