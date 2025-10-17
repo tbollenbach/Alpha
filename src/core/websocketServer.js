@@ -5,7 +5,7 @@ const path = require('path');
 class WebSocketServer {
   constructor() {
     this.wss = null;
-    this.clients = new Map(); // userId -> { ws, username, role, status }
+    this.clients = new Map(); // userId -> { ws, username, role, status, isMuted, isSpeaking }
     this.config = this.loadConfig();
     this.roles = this.loadRoles();
   }
@@ -66,6 +66,18 @@ class WebSocketServer {
         case 'typing':
           this.handleTyping(ws, data);
           break;
+        case 'webrtc_offer':
+          this.handleWebRTCOffer(ws, data);
+          break;
+        case 'webrtc_answer':
+          this.handleWebRTCAnswer(ws, data);
+          break;
+        case 'webrtc_ice':
+          this.handleWebRTCIce(ws, data);
+          break;
+        case 'voice_state':
+          this.handleVoiceState(ws, data);
+          break;
         default:
           console.log('Unknown message type:', data.type);
       }
@@ -85,7 +97,9 @@ class WebSocketServer {
       ws,
       username,
       role,
-      status: 'online'
+      status: 'online',
+      isMuted: true,
+      isSpeaking: false
     });
 
     // Send auth success
@@ -213,7 +227,9 @@ class WebSocketServer {
       username: client.username,
       role: client.role,
       status: client.status,
-      roleColor: this.roles.roles[client.role].color
+      roleColor: this.roles.roles[client.role].color,
+      isMuted: client.isMuted,
+      isSpeaking: client.isSpeaking
     }));
 
     const message = JSON.stringify({
@@ -272,6 +288,93 @@ class WebSocketServer {
 
   generateUserId() {
     return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // WebRTC Signaling handlers
+  handleWebRTCOffer(ws, data) {
+    const sender = this.getClientByWs(ws);
+    if (!sender) return;
+
+    const { targetUsername, offer } = data;
+    const target = this.getClientByUsername(targetUsername);
+
+    if (!target) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Target user not found'
+      }));
+      return;
+    }
+
+    // Forward offer to target
+    target.ws.send(JSON.stringify({
+      type: 'webrtc_offer',
+      fromUsername: sender.username,
+      offer
+    }));
+  }
+
+  handleWebRTCAnswer(ws, data) {
+    const sender = this.getClientByWs(ws);
+    if (!sender) return;
+
+    const { targetUsername, answer } = data;
+    const target = this.getClientByUsername(targetUsername);
+
+    if (!target) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Target user not found'
+      }));
+      return;
+    }
+
+    // Forward answer to target
+    target.ws.send(JSON.stringify({
+      type: 'webrtc_answer',
+      fromUsername: sender.username,
+      answer
+    }));
+  }
+
+  handleWebRTCIce(ws, data) {
+    const sender = this.getClientByWs(ws);
+    if (!sender) return;
+
+    const { targetUsername, candidate } = data;
+    const target = this.getClientByUsername(targetUsername);
+
+    if (!target) return;
+
+    // Forward ICE candidate to target
+    target.ws.send(JSON.stringify({
+      type: 'webrtc_ice',
+      fromUsername: sender.username,
+      candidate
+    }));
+  }
+
+  handleVoiceState(ws, data) {
+    const client = this.getClientByWs(ws);
+    if (!client) return;
+
+    const { isMuted, isSpeaking } = data;
+
+    if (isMuted !== undefined) {
+      client.isMuted = isMuted;
+    }
+
+    if (isSpeaking !== undefined) {
+      client.isSpeaking = isSpeaking;
+    }
+
+    // Broadcast voice state change
+    this.broadcast(JSON.stringify({
+      type: 'voice_state',
+      username: client.username,
+      isMuted: client.isMuted,
+      isSpeaking: client.isSpeaking
+    }));
   }
 
   stop() {

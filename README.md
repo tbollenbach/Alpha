@@ -16,6 +16,12 @@ A Discord-like desktop chat application built with Electron and Node.js, featuri
 
 ✅ **Typing Indicators**: See when someone is typing
 
+✅ **Voice Channels**: Real-time voice chat with WebRTC peer-to-peer audio
+
+✅ **Microphone Controls**: Mute/unmute your microphone with visual indicators
+
+✅ **Speaking Indicators**: See who's currently speaking with animated indicators
+
 ✅ **Dark Theme**: Modern, Discord-inspired UI
 
 ✅ **Auto-Update Checker**: Checks GitHub for new releases every 30 minutes
@@ -31,7 +37,8 @@ OurWorld/
 │   ├── ui/
 │   │   ├── index.html            # Main UI layout
 │   │   ├── styles.css            # Dark theme styling
-│   │   └── client.js             # Client-side WebSocket logic
+│   │   ├── client.js             # Client-side WebSocket logic
+│   │   └── audioManager.js       # WebRTC audio management
 │   ├── core/
 │   │   └── websocketServer.js    # WebSocket server & message routing
 │   ├── data/
@@ -145,6 +152,26 @@ To test the chat with multiple users on the same computer:
 4. **Move Windows**: Drag DM windows by their header to reposition
 5. **Close DM**: Click the × button to close a DM window
 
+### Voice Channels
+
+The app includes real-time voice communication using WebRTC:
+
+1. **Join Voice**: Click the "🔇 Join Voice" button to connect to the voice channel
+   - Your browser will request microphone permissions
+   - You'll be muted by default when joining
+
+2. **Unmute Microphone**: Click "🎤 Muted" to unmute and start talking
+   - Button turns green (🎤 Unmuted) when active
+   - Your voice will be transmitted to all users in the voice channel
+
+3. **Speaking Indicators**: 
+   - When someone speaks, a pulsing microphone icon appears next to their name
+   - Muted users show a 🔇 icon, unmuted users show a 🎤 icon
+
+4. **Leave Voice**: Click "🔊 Leave Voice" to disconnect from voice chat
+
+**Note**: Voice uses peer-to-peer WebRTC connections. All users who join voice will automatically connect to each other. For best quality, use headphones to prevent echo.
+
 ### User Roles
 
 The app includes three default roles:
@@ -210,6 +237,28 @@ The app runs locally by default. To enable network access:
 
 - Ensure the first instance is fully started before launching others
 - Check that all instances are using the same port in `config.json`
+
+### Voice chat not working
+
+- **"Failed to access microphone"**: 
+  - Grant microphone permissions when prompted by the browser
+  - Check your system's privacy/security settings
+  - Ensure no other app is using your microphone exclusively
+  
+- **Can't hear other users**: 
+  - Make sure they've joined voice and unmuted their mic
+  - Check your system volume and audio output device
+  - Try leaving and rejoining the voice channel
+
+- **Echo or feedback**: 
+  - Use headphones instead of speakers
+  - Ensure other users are also using headphones
+  - Keep microphone away from speakers
+
+- **Choppy or laggy audio**:
+  - Check your network connection
+  - Close bandwidth-heavy applications
+  - WebRTC works best on local networks or good internet connections
 
 ## Development
 

@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
+const AudioManager = require('./audioManager');
 
 class ChatClient {
   constructor() {
@@ -11,6 +12,8 @@ class ChatClient {
     this.currentRoom = '#AlphaLobby';
     this.dmWindows = new Map(); // recipientUsername -> DM window element
     this.typingTimeout = null;
+    this.audioManager = null;
+    this.voiceConnected = false;
     
     this.loadConfig();
     this.initializeUI();
@@ -39,6 +42,11 @@ class ChatClient {
     this.currentRole = document.getElementById('currentRole');
     this.typingIndicator = document.getElementById('typingIndicator');
 
+    // Voice controls
+    this.voiceBtn = document.getElementById('voiceBtn');
+    this.muteBtn = document.getElementById('muteBtn');
+    this.voiceStatus = document.getElementById('voiceStatus');
+
     // Event listeners
     this.joinBtn.addEventListener('click', () => this.handleJoin());
     this.usernameInput.addEventListener('keypress', (e) => {
@@ -51,6 +59,10 @@ class ChatClient {
     });
 
     this.messageInput.addEventListener('input', () => this.handleTyping());
+
+    // Voice event listeners
+    this.voiceBtn.addEventListener('click', () => this.toggleVoiceChannel());
+    this.muteBtn.addEventListener('click', () => this.toggleMute());
 
     // Focus username input
     this.usernameInput.focus();
@@ -141,6 +153,24 @@ class ChatClient {
         case 'typing':
           this.handleTypingIndicator(message);
           break;
+        case 'webrtc_offer':
+          if (this.audioManager) {
+            this.audioManager.handleOffer(message.fromUsername, message.offer);
+          }
+          break;
+        case 'webrtc_answer':
+          if (this.audioManager) {
+            this.audioManager.handleAnswer(message.fromUsername, message.answer);
+          }
+          break;
+        case 'webrtc_ice':
+          if (this.audioManager) {
+            this.audioManager.handleIceCandidate(message.fromUsername, message.candidate);
+          }
+          break;
+        case 'voice_state':
+          this.handleVoiceStateChange(message);
+          break;
         case 'error':
           this.displayError(message.message);
           break;
@@ -198,6 +228,20 @@ class ChatClient {
       userItem.appendChild(statusDot);
       userItem.appendChild(userDetails);
 
+      // Add voice indicator
+      const voiceIndicator = document.createElement('div');
+      voiceIndicator.className = 'voice-indicator';
+      if (user.isMuted !== undefined) {
+        voiceIndicator.textContent = user.isMuted ? '🔇' : '🎤';
+        if (user.isSpeaking && !user.isMuted) {
+          voiceIndicator.classList.add('speaking');
+        }
+        if (user.isMuted) {
+          voiceIndicator.classList.add('muted');
+        }
+      }
+      userItem.appendChild(voiceIndicator);
+
       // Add click handler for DM
       if (user.username !== this.username) {
         userItem.addEventListener('click', () => {
@@ -207,6 +251,11 @@ class ChatClient {
 
       this.userList.appendChild(userItem);
     });
+
+    // If voice is connected, establish peer connections with new users
+    if (this.audioManager && this.voiceConnected) {
+      this.audioManager.connectToAllUsers(users);
+    }
   }
 
   sendMessage() {
@@ -482,6 +531,94 @@ class ChatClient {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     }
+  }
+
+  async toggleVoiceChannel() {
+    if (!this.voiceConnected) {
+      // Join voice channel
+      this.audioManager = new AudioManager(this);
+      const initialized = await this.audioManager.initialize();
+      
+      if (initialized) {
+        this.voiceConnected = true;
+        this.voiceBtn.textContent = '🔊 Leave Voice';
+        this.voiceBtn.classList.add('active');
+        this.muteBtn.disabled = false;
+        this.voiceStatus.textContent = 'Connected (Muted)';
+        
+        // Connect to all existing users
+        // We'll get the user list and connect to them
+        console.log('Joined voice channel');
+      } else {
+        this.displayError('Failed to access microphone. Please check permissions.');
+      }
+    } else {
+      // Leave voice channel
+      if (this.audioManager) {
+        this.audioManager.cleanup();
+        this.audioManager = null;
+      }
+      
+      this.voiceConnected = false;
+      this.voiceBtn.textContent = '🔇 Join Voice';
+      this.voiceBtn.classList.remove('active');
+      this.muteBtn.disabled = true;
+      this.muteBtn.textContent = '🎤 Muted';
+      this.muteBtn.classList.remove('unmuted');
+      this.voiceStatus.textContent = 'Disconnected';
+      
+      console.log('Left voice channel');
+    }
+  }
+
+  async toggleMute() {
+    if (!this.audioManager) return;
+    
+    const isUnmuted = await this.audioManager.toggleMute();
+    
+    if (isUnmuted) {
+      this.muteBtn.textContent = '🎤 Unmuted';
+      this.muteBtn.classList.add('unmuted');
+      this.voiceStatus.textContent = 'Connected (Unmuted)';
+    } else {
+      this.muteBtn.textContent = '🎤 Muted';
+      this.muteBtn.classList.remove('unmuted');
+      this.voiceStatus.textContent = 'Connected (Muted)';
+    }
+  }
+
+  updateVoiceState(state) {
+    this.send({
+      type: 'voice_state',
+      ...state
+    });
+  }
+
+  handleVoiceStateChange(data) {
+    const { username, isMuted, isSpeaking } = data;
+    
+    // Update user list visual indicators
+    const userItems = this.userList.querySelectorAll('.user-item');
+    userItems.forEach(item => {
+      if (item.dataset.username === username) {
+        const voiceIndicator = item.querySelector('.voice-indicator');
+        if (voiceIndicator) {
+          if (isSpeaking && !isMuted) {
+            voiceIndicator.classList.add('speaking');
+          } else {
+            voiceIndicator.classList.remove('speaking');
+          }
+          
+          if (isMuted) {
+            voiceIndicator.textContent = '🔇';
+            voiceIndicator.classList.add('muted');
+          } else {
+            voiceIndicator.textContent = '🎤';
+            voiceIndicator.classList.remove('muted');
+          }
+        }
+      }
+    });
   }
 
   formatTime(timestamp) {
